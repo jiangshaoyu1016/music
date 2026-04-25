@@ -3,471 +3,165 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>自动播放音乐 | 温馨网页</title>
+  <title>音乐播放器</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', 'Roboto', 'Noto Sans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
-      background: linear-gradient(180deg, #f5e6d3 0%, #e8d5c0 30%, #d4c4b5 100%);
+      font-family: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+      background: linear-gradient(180deg, #f5e6d3, #d4c4b5);
       color: #4a3f35;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-
     .music-bar {
       position: sticky;
       top: 0;
       z-index: 100;
-      width: 100%;
-      max-width: 700px;
-      margin: 20px auto 0;
-      background: rgba(255, 250, 245, 0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 40px;
-      padding: 18px 28px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      border: 1px solid rgba(255,255,255,0.6);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 15px;
+      width: 95%;
+      max-width: 500px;
+      margin: 15px auto;
+      background: rgba(255,250,245,0.9);
+      border-radius: 30px;
+      padding: 15px 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      text-align: center;
     }
-
-    .music-info {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex-shrink: 0;
-    }
-
-    .music-icon-small {
-      font-size: 2rem;
-      animation: float 3s ease-in-out infinite;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-5px); }
-    }
-
-    .music-title-group {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .music-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #5e4b3c;
-      letter-spacing: 1px;
-    }
-
-    .music-subtitle {
-      font-size: 0.8rem;
-      color: #8b7a68;
-    }
-
-    .status-mini {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
+    .music-title { font-size: 1.1rem; font-weight: 600; color: #5e4b3c; }
+    .music-subtitle { font-size: 0.8rem; color: #8b7a68; margin-bottom: 10px; }
+    .status-text {
+      font-size: 0.9rem;
       color: #6b5d4f;
-      background: rgba(240, 230, 218, 0.7);
-      border-radius: 30px;
+      background: rgba(240,230,218,0.7);
+      border-radius: 20px;
       padding: 6px 16px;
+      display: inline-block;
+      margin: 8px 0;
     }
-
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #b0a090;
-      transition: all 0.3s ease;
-    }
-
-    .status-dot.playing {
-      background: #7da87b;
-      box-shadow: 0 0 10px #7da87b;
-    }
-
-    .btn-group-small {
+    .btn-group {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      justify-content: center;
     }
-
-    .btn-small {
-      background: rgba(255, 251, 245, 0.9);
-      border: 1px solid rgba(200, 180, 160, 0.5);
-      padding: 10px 18px;
-      border-radius: 30px;
-      font-size: 0.85rem;
+    .btn {
+      background: rgba(255,251,245,0.9);
+      border: 1px solid rgba(200,180,160,0.5);
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-size: 0.9rem;
       font-weight: 500;
       color: #4a3f35;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.2s ease;
-      backdrop-filter: blur(8px);
-      white-space: nowrap;
+      transition: all 0.2s;
+      border: none;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
     }
-
-    .btn-small:hover {
-      background: white;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-      transform: translateY(-1px);
-    }
-
-    .btn-small:active {
-      transform: translateY(1px);
-    }
-
-    .btn-small.primary {
-      background: #e7d7c4;
-      border-color: #d6c1aa;
-      font-weight: 600;
-    }
-
-    #unlockOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      cursor: pointer;
-    }
-
-    #unlockBox {
-      background: white;
-      padding: 40px 50px;
-      border-radius: 50px;
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #4a3f35;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-      animation: pulse 2s infinite;
-      text-align: center;
-      min-width: 250px;
-      min-height: 150px;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.04); }
-    }
-
-    .article-container {
-      width: 100%;
-      max-width: 700px;
-      margin: 25px auto 60px;
-      padding: 0 20px;
-    }
-
-    .article-card {
-      background: rgba(255, 252, 248, 0.75);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      border-radius: 36px;
-      padding: 50px 45px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.08);
-      border: 1px solid rgba(255,255,255,0.6);
+    .btn:active { transform: scale(0.95); background: #e7d7c4; }
+    .btn.play-btn { background: #e7d7c4; font-weight: 600; }
+    .article {
+      width: 95%;
+      max-width: 500px;
+      margin: 15px auto 40px;
+      background: rgba(255,252,248,0.8);
+      border-radius: 25px;
+      padding: 30px 25px;
       line-height: 2;
-      font-size: 1.05rem;
-      color: #3d352b;
     }
-
-    .article-card h1 {
-      text-align: center;
-      font-size: 2rem;
-      color: #5e4b3c;
-      margin-bottom: 15px;
-      letter-spacing: 3px;
-      font-weight: 600;
-    }
-
-    .article-card h2 {
-      font-size: 1.4rem;
-      color: #6b5a48;
-      margin: 35px 0 15px;
-      border-left: 4px solid #c8b6a6;
-      padding-left: 15px;
-    }
-
-    .article-card p {
-      text-indent: 2em;
-      margin-bottom: 15px;
-    }
-
-    .article-card .divider {
-      text-align: center;
-      color: #c8b6a6;
-      margin: 30px 0;
-      font-size: 1.2rem;
-      letter-spacing: 8px;
-    }
-
-    @media (max-width: 600px) {
-      .music-bar {
-        flex-direction: column;
-        align-items: stretch;
-        border-radius: 30px;
-        padding: 15px 20px;
-        gap: 12px;
-      }
-      .btn-group-small {
-        justify-content: center;
-      }
-      .article-card {
-        padding: 30px 25px;
-        border-radius: 28px;
-        font-size: 0.95rem;
-      }
-      .article-card h1 {
-        font-size: 1.5rem;
-      }
-      #unlockBox {
-        padding: 30px 30px;
-        font-size: 1.3rem;
-        min-width: 200px;
-        min-height: 120px;
-      }
-    }
+    .article h1 { text-align: center; font-size: 1.5rem; color: #5e4b3c; margin-bottom: 10px; }
+    .article h2 { font-size: 1.1rem; color: #6b5a48; margin: 20px 0 10px; border-left: 3px solid #c8b6a6; padding-left: 10px; }
+    .article p { text-indent: 2em; margin-bottom: 10px; font-size: 0.95rem; }
+    .divider { text-align: center; color: #c8b6a6; margin: 20px 0; letter-spacing: 5px; }
   </style>
 </head>
 <body>
 
-  <div id="unlockOverlay">
-    <div id="unlockBox">
-      <span style="font-size:3rem;">🎵</span>
-      <span>轻触开始播放</span>
-    </div>
-  </div>
-
   <div class="music-bar">
-    <div class="music-info">
-      <span class="music-icon-small">🎵</span>
-      <div class="music-title-group">
-        <span class="music-title">晨光旋律</span>
-        <span class="music-subtitle">轻音乐陪伴阅读</span>
-      </div>
-    </div>
-
-    <div class="status-mini">
-      <span class="status-dot" id="statusDot"></span>
-      <span id="statusTextSmall">准备就绪</span>
-    </div>
-
-    <div class="btn-group-small">
-      <button class="btn-small" id="playBtn" title="播放">▶ 播放</button>
-      <button class="btn-small" id="pauseBtn" title="暂停">⏸ 暂停</button>
-      <button class="btn-small primary" id="replayBtn" title="重播">🔄 重播</button>
-      <button class="btn-small" id="switchBtn" title="切歌">🔀 切歌</button>
+    <div class="music-title">🎵 晨光旋律</div>
+    <div class="music-subtitle">轻音乐陪伴阅读</div>
+    <div class="status-text" id="statusText">点击下方按钮播放</div>
+    <div class="btn-group">
+      <button class="btn play-btn" id="playBtn">▶ 播放</button>
+      <button class="btn" id="pauseBtn">⏸ 暂停</button>
+      <button class="btn" id="nextBtn">⏭ 下一首</button>
     </div>
   </div>
 
-  <div class="article-container">
-    <div class="article-card">
-      
-      <h1>🍂 时光深处的旋律</h1>
-      <p class="divider">—— · ✿ · ——</p>
-
-      <p>在每一个清晨的微光里，总有一段旋律悄然响起。它不疾不徐，像山间流淌的溪水，穿过石缝，绕过青苔，带着林间特有的湿润与清凉，缓缓注入心田。音乐，从来不只是声音的组合，它是时间的雕刻师，是记忆的容器，是我们在纷繁世界里为自己保留的一方净土。</p>
-
-      <p>有时候，我会想，人为什么要听音乐？是为了排遣孤独，还是为了寻找共鸣？或许两者都有。当一段熟悉的钢琴前奏响起，仿佛整个世界都安静下来。那些被日常琐事掩埋的情绪，那些说不出口的心事，都在音符的跳跃中被轻轻托起，放置在柔软的云朵之上。</p>
-
-      <h2>✨ 记忆里的八音盒</h2>
-      <p>小时候，外婆家有一个老旧的八音盒。木质的外壳已经磨损，露出里面浅色的木纹，但发条一拧，清脆的《致爱丽丝》就会叮叮咚咚地流淌出来。我常常趴在外婆的膝盖上，看着八音盒里那个小小的金属圆筒缓缓转动，上面的凸起拨动着钢片，发出一个个晶莹剔透的声音。</p>
-
-      <h2>🌙 夜与钢琴</h2>
-      <p>深夜，是我与钢琴曲独处的时间。白天的喧嚣退去，窗外的灯火渐渐稀疏，世界仿佛只剩下我和耳机里流淌的音符。钢琴的声音有一种独特的魔力，它既可以温柔如月光，也可以激昂如暴雨。</p>
-
-      <h2>💭 旋律与回忆</h2>
-      <p>科学研究表明，音乐是触发自传体记忆最强烈的线索之一。一段特定的旋律，能瞬间将你带回多年前的某个场景。这些记忆，平时沉睡在脑海深处，而音乐就是那把开启它们的钥匙。</p>
-
-      <h2>🕊️ 尾声：让旋律继续</h2>
-      <p>愿你的每一天，都有美好的旋律相伴。愿那些音符，能抚平你的疲惫，点亮你的心情，陪你走过每一个清晨与黄昏。</p>
-
-      <p class="divider">—— · ✿ · ——</p>
-      <p style="text-align:center; color:#8b7a68; font-size:0.9rem;">🎶 感谢聆听 · 感谢阅读 🎶</p>
-
-    </div>
+  <div class="article">
+    <h1>🍂 时光深处的旋律</h1>
+    <p class="divider">—— · ✿ · ——</p>
+    <p>在每一个清晨的微光里，总有一段旋律悄然响起。它不疾不徐，像山间流淌的溪水，穿过石缝，绕过青苔，带着林间特有的湿润与清凉，缓缓注入心田。</p>
+    <p>有时候，我会想，人为什么要听音乐？是为了排遣孤独，还是为了寻找共鸣？或许两者都有。</p>
+    <h2>✨ 记忆里的八音盒</h2>
+    <p>小时候，外婆家有一个老旧的八音盒。木质的外壳已经磨损，但发条一拧，清脆的旋律就会叮叮咚咚地流淌出来。</p>
+    <h2>🌙 夜与钢琴</h2>
+    <p>深夜，是我与钢琴曲独处的时间。白天的喧嚣退去，世界仿佛只剩下我和耳机里流淌的音符。</p>
+    <p class="divider">—— · ✿ · ——</p>
+    <p style="text-align:center; color:#8b7a68;">🎶 感谢聆听</p>
   </div>
 
   <script>
-    (function() {
-      const PLAYLIST = [
-        "./juebieshu.mp3",
-        "./likai.mp3",
-        "./shuei.mp3",
-        "./colelams.mp3"
-      ];
-      
-      let currentIndex = 0;
-      let audio = null;
-      let isUnlocked = false;
-      
-      const playBtn = document.getElementById('playBtn');
-      const pauseBtn = document.getElementById('pauseBtn');
-      const replayBtn = document.getElementById('replayBtn');
-      const switchBtn = document.getElementById('switchBtn');
-      const statusDot = document.getElementById('statusDot');
-      const statusTextSmall = document.getElementById('statusTextSmall');
-      const unlockOverlay = document.getElementById('unlockOverlay');
-      
-      function updateUI(state) {
-        switch (state) {
-          case 'playing':
-            statusDot.className = 'status-dot playing';
-            statusTextSmall.textContent = `第${currentIndex+1}首 · 播放中`;
-            break;
-          case 'paused':
-            statusDot.className = 'status-dot';
-            statusTextSmall.textContent = '已暂停';
-            break;
-          case 'waiting':
-            statusDot.className = 'status-dot playing';
-            statusTextSmall.textContent = '加载中...';
-            break;
-          case 'ended':
-            statusDot.className = 'status-dot';
-            statusTextSmall.textContent = '播放结束';
-            break;
-          case 'ready':
-          default:
-            statusDot.className = 'status-dot';
-            statusTextSmall.textContent = `准备就绪 · 第${currentIndex+1}首`;
-            break;
-        }
+    const PLAYLIST = [
+      "juebieshu.mp3",
+      "likai.mp3",
+      "shuei.mp3",
+      "colelams.mp3"
+    ];
+    
+    let currentIndex = 0;
+    let audio = null;
+    
+    const statusText = document.getElementById('statusText');
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    
+    function updateStatus(msg) {
+      statusText.textContent = msg;
+    }
+    
+    function createAudio() {
+      if (audio) {
+        audio.pause();
+        audio = null;
       }
+      audio = new Audio(PLAYLIST[currentIndex]);
+      audio.volume = 0.5;
       
-      function destroyAudio() {
-        if (audio) {
-          audio.pause();
-          audio.removeAttribute('src');
-          audio.load();
-          audio = null;
-        }
-      }
-      
-      function createAudio() {
-        destroyAudio();
-        
-        audio = new Audio(PLAYLIST[currentIndex]);
-        audio.volume = 0.5;
-        audio.preload = 'auto';
-        
-        audio.addEventListener('play', () => updateUI('playing'));
-        audio.addEventListener('pause', () => {
-          if (!audio.ended) updateUI('paused');
-        });
-        audio.addEventListener('ended', () => updateUI('ended'));
-        audio.addEventListener('waiting', () => updateUI('waiting'));
-        
-        updateUI('ready');
-      }
-      
-      function handleFirstInteraction() {
-        if (isUnlocked) return;
-        
-        if (!audio) createAudio();
-        
-        audio.play().then(() => {
-          isUnlocked = true;
-          unlockOverlay.style.display = 'none';
-          updateUI('playing');
-        }).catch((err) => {
-          console.error('播放失败:', err);
-        });
-      }
-      
-      function playAudio() {
-        if (!isUnlocked) {
-          handleFirstInteraction();
-          return;
-        }
-        
-        if (!audio) createAudio();
-        if (audio.ended) audio.currentTime = 0;
-        
-        audio.play().then(() => {
-          updateUI('playing');
-        }).catch(err => {
-          console.warn('播放失败:', err.message);
-        });
-      }
-      
-      function pauseAudio() {
-        if (!isUnlocked) return;
-        if (audio && !audio.paused) {
-          audio.pause();
-        }
-      }
-      
-      function replayAudio() {
-        if (!isUnlocked) {
-          handleFirstInteraction();
-          return;
-        }
-        if (!audio) createAudio();
-        audio.currentTime = 0;
-        audio.play().then(() => {
-          updateUI('playing');
-        }).catch(() => {});
-      }
-      
-      function switchTrack() {
-        if (!isUnlocked) {
-          handleFirstInteraction();
-          return;
-        }
-        
-        const wasPlaying = (audio && !audio.paused && !audio.ended);
+      audio.addEventListener('play', () => updateStatus(`正在播放 · 第${currentIndex+1}首`));
+      audio.addEventListener('pause', () => updateStatus('已暂停'));
+      audio.addEventListener('ended', () => {
+        updateStatus('播放完毕');
         currentIndex = (currentIndex + 1) % PLAYLIST.length;
         createAudio();
-        
-        if (wasPlaying) {
-          audio.play().then(() => {
-            updateUI('playing');
-          }).catch(() => {});
-        }
-      }
-      
-      unlockOverlay.addEventListener('click', handleFirstInteraction);
-      unlockOverlay.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        handleFirstInteraction();
+        audio.play();
       });
-      
-      playBtn.addEventListener('click', playAudio);
-      pauseBtn.addEventListener('click', pauseAudio);
-      replayBtn.addEventListener('click', replayAudio);
-      switchBtn.addEventListener('click', switchTrack);
-      
+      audio.addEventListener('error', () => updateStatus('加载失败，请检查文件'));
+    }
+    
+    function play() {
+      if (!audio) createAudio();
+      audio.play().catch(() => updateStatus('播放失败，请再点一次'));
+    }
+    
+    function pause() {
+      if (audio) audio.pause();
+    }
+    
+    function next() {
+      currentIndex = (currentIndex + 1) % PLAYLIST.length;
       createAudio();
-      updateUI('ready');
-    })();
+      play();
+    }
+    
+    playBtn.addEventListener('click', play);
+    pauseBtn.addEventListener('click', pause);
+    nextBtn.addEventListener('click', next);
+    
+    createAudio();
+    updateStatus('准备就绪 · 共4首');
   </script>
 </body>
 </html>
